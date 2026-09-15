@@ -30,7 +30,7 @@ Cílový repozitář: https://github.com/sochorf/iotmeter
 
 Remote `origin` je připraven. Před prvním push ověřit obsah vzdáleného repozitáře pomocí `git fetch origin`. Pokud již má historii, nejdřív ji zkontrolovat a propojit s importem; nepoužívat force push. Pro prázdný repozitář použít `git push -u origin main` po přihlášení ke GitHubu.
 
-Tento import ještě neprokazuje kompatibilitu distribuce přes HACS. Automatické nasazování není nastaveno. Git sleduje tuto pracovní kopii, nikoli soubory měněné přímo v HA.
+Repozitář obsahuje metadata pro přidání do HACS. Instalace v konkrétní instanci HA musí být ověřena. Automatické nasazování není nastaveno. Git sleduje tuto pracovní kopii, nikoli soubory měněné přímo v HA.
 
 ## Kontroly importu
 
@@ -38,3 +38,16 @@ Tento import ještě neprokazuje kompatibilitu distribuce přes HACS. Automatick
 - Provedena kontrola syntaxe Pythonu a parsování manifestu JSON.
 - Orientační kontrola kódu nenašla hesla ani tokeny. Konstanta `VALID_DEVICE_ID` je součást původního kódu.
 - Funkčnost v běžícím HA nebyla při importu testována.
+
+## Instalace a aktualizace přes HACS
+
+1. Před prvním převzetím instalace ověřit, že od dodané zálohy nebyly v HA provedeny další úpravy. Pokud ano, nejdřív je importovat do Gitu.
+2. Vytvořit aktuální zálohu HA.
+3. V HACS otevřít nabídku ⋮ → Vlastní repozitáře, přidat `https://github.com/sochorf/iotmeter` s typem Integrace.
+4. Vyhledat IoTMeter a stáhnout požadovanou verzi. Stažení přepíše soubory existující složky integrace.
+5. Existující položku IoTMeteru v Nastavení → Zařízení a služby nemazat ani nezakládat znovu.
+6. Restartovat HA, ověřit logy a entity a zaznamenat nasazení do DEPLOYMENTS.md.
+
+Dokud neexistuje GitHub Release, HACS používá výchozí větev. Pro řízené aktualizace vydávat GitHub Releases s tagem odpovídajícím verzi manifestu; samotný tag nestačí. Automatické aktualizace neaktivovat, pokud má každému nasazení předcházet kontrola uživatelem. Změny provedené přímo v HA se do GitHubu neodesílají.
+
+Dokumentace: https://www.hacs.xyz/docs/faq/custom_repositories/ a https://www.hacs.xyz/docs/publish/integration/
