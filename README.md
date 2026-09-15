@@ -1,53 +1,93 @@
 # IoTMeter pro Home Assistant
 
-Vlastní integrace pro Home Assistant. Výchozí stav pochází z uživatelské zálohy `iotmeter.zip` dodané 15. 9. 2026; manifest uvádí verzi `1.0.1`. Starší historie změn není k dispozici.
+Vlastní integrace pro sledování elektrické energie a ovládání nabíjení prostřednictvím zařízení **IoTmeter**. Home Assistant komunikuje se zařízením přímo v místní síti přes HTTP API s odpověďmi JSON; integrace nevyžaduje cloudový účet.
 
-## Struktura
+Jde o komunitní projekt, nikoli oficiální integraci výrobce.
 
-`custom_components/iotmeter/` obsahuje přesnou kopii zdrojových souborů ze zálohy. Python cache a metadata macOS jsou vynechány. Součástí nejsou nastavení HA ani provozní data.
+## O zařízení
 
-## Další změny
+[IoTmeter 65A (WiFi + RS485) od EV Racing](https://www.evracing.cz/iotmeter-65a-wifi-rs485/) je chytrý elektroměr pro instalaci do rozvaděče. Podle výrobce slouží k měření spotřeby a dynamickému řízení nabíjení podle dostupné kapacity sítě, nízkého tarifu HDO a výroby z fotovoltaiky. Nabízí Wi-Fi, HTTP API a rozhraní RS485 master pro stanice EVSE-DIN-RS485. U tohoto modelu výrobce uvádí podporu až tří nabíjecích stanic.
 
-1. Začít z aktuální větve `main` a vytvořit pracovní větev.
-2. Upravit kód v repozitáři a zkontrolovat `git diff`.
-3. Provést vhodné kontroly. Kontrola syntaxe sama neověřuje funkčnost v HA.
-4. Uložit logickou změnu samostatným commitem s vysvětlením důvodu.
-5. Po kontrole začlenit změnu do `main`.
-6. Před nasazením zálohovat dosavadní složku integrace a podle dopadu i HA.
-7. Přenést obsah `custom_components/iotmeter/` do `/config/custom_components/iotmeter/` dostupným správcem souborů; nevytvořit další vnořenou složku `iotmeter`.
-8. Restartovat Home Assistant a ověřit logy, dostupnost a hodnoty entit.
-9. Zapsat datum, nasazený commit (`git rev-parse HEAD`), verzi HA a výsledek do `DEPLOYMENTS.md`.
+Integrace využívá HTTP API IoTmeteru. Připojení nabíjecích stanic přes RS485 zajišťuje samotný IoTmeter; Home Assistant nepotřebuje vlastní RS485 adaptér.
 
-Při vydání nové verze upravit verzi v manifestu a označit odpovídající commit tagem. První import nezvyšuje verzi a netvrdí, že jde o nově otestované vydání.
+## Co integrace nabízí
 
-## Návrat
+Dostupnost jednotlivých údajů závisí na firmwaru, zapojení a datech vracených zařízením.
 
-Z pracovní kopie předchozího nasazeného commitu obnovit celou složku integrace a restartovat HA. Nepoužívat `git reset --hard` na rozpracovanou pracovní kopii. Pokud změna migrovala uložená data, může být potřeba obnovit i zálohu HA.
+| Oblast | Funkce |
+|---|---|
+| Elektrická síť | Napětí, proud, činný a zdánlivý výkon a účiník jednotlivých fází; součet činného výkonu |
+| Energie | Denní a celkové hodnoty odběru a dodávky, údaje po fázích i součty |
+| Nabíjení | Údaje EVSE, proudové hodnoty a diagnostika jednotlivých nabíjecích stanic |
+| Proudové limity | Nastavení limitu odběru ze sítě, limitu při HDO, podpory ze sítě při nabíjení z FVE a limitů jednotlivých EVSE |
+| Režimy | Volba nabíjení ECO / FAST a režimu FVE Off / 1p / 3p |
+| Přepínače | Povolení nabíjení, nabíjení podle HDO, vyvažování zátěže a další nastavení vystavená API |
+| Diagnostika | Verze firmwaru, chybové údaje a časy posledních úspěšných odpovědí pro nastavení a měření |
 
-## GitHub
+Entity lze využít v přehledech a vlastních automatizacích Home Assistantu. Integrace sama neobsahuje plánovač podle cen elektřiny nebo předpovědi výroby FVE.
 
-Cílový repozitář: https://github.com/sochorf/iotmeter
+### Interpretace údajů EVSE
 
-Remote `origin` je připraven. Před prvním push ověřit obsah vzdáleného repozitáře pomocí `git fetch origin`. Pokud již má historii, nejdřív ji zkontrolovat a propojit s importem; nepoužívat force push. Pro prázdný repozitář použít `git push -u origin main` po přihlášení ke GitHubu.
+Pro jednotlivé stanice integrace poskytuje stav, původní stavový kód, komunikační chybový údaj a konfigurační a výstupní proud. Proudové hodnoty API nejsou automaticky důkazem skutečného odběru vozidla.
 
-Repozitář obsahuje metadata pro přidání do HACS. Instalace v konkrétní instanci HA musí být ověřena. Automatické nasazování není nastaveno. Git sleduje tuto pracovní kopii, nikoli soubory měněné přímo v HA.
+Aktuální implementace rozlišuje stavové kódy `1` (odpojeno) a `2` (připojeno). Ostatní kódy zobrazuje jako `unmapped`; odpovídající binární senzor připojení je v takovém případě nedostupný, aby nehlásil chybně odpojené vozidlo. Chybové kódy EVSE předává bez vlastní interpretace.
 
-## Kontroly importu
+## Požadavky
 
-- Zdrojové soubory odpovídají ZIPu bajt po bajtu.
-- Provedena kontrola syntaxe Pythonu a parsování manifestu JSON.
-- Orientační kontrola kódu nenašla hesla ani tokeny. Konstanta `VALID_DEVICE_ID` je součást původního kódu.
-- Funkčnost v běžícím HA nebyla při importu testována.
+- Home Assistant s možností instalovat vlastní integrace.
+- IoTmeter s dostupným a kompatibilním HTTP API v síti přístupné z HA.
+- IP adresa zařízení; doporučujeme rezervaci adresy v DHCP.
+- Dostupný TCP port **8000**, který používá současná implementace.
+- Pro instalaci přes HACS funkční HACS a přístup ke GitHubu.
 
-## Instalace a aktualizace přes HACS
+Podpora místních ikon ve složce `brand` vyžaduje Home Assistant **2026.3 nebo novější**. To není deklarace minimální otestované verze celé integrace; matice kompatibility HA a firmwaru zatím není k dispozici.
 
-1. Před prvním převzetím instalace ověřit, že od dodané zálohy nebyly v HA provedeny další úpravy. Pokud ano, nejdřív je importovat do Gitu.
-2. Vytvořit aktuální zálohu HA.
-3. V HACS otevřít nabídku ⋮ → Vlastní repozitáře, přidat `https://github.com/sochorf/iotmeter` s typem Integrace.
-4. Vyhledat IoTMeter a stáhnout požadovanou verzi. Stažení přepíše soubory existující složky integrace.
-5. Existující položku IoTMeteru v Nastavení → Zařízení a služby nemazat ani nezakládat znovu.
-6. Restartovat HA, ověřit logy a entity a zaznamenat nasazení do DEPLOYMENTS.md.
+## Instalace přes HACS
 
-Dokud neexistuje GitHub Release, HACS používá výchozí větev. Pro řízené aktualizace vydávat GitHub Releases s tagem odpovídajícím verzi manifestu; samotný tag nestačí. Automatické aktualizace neaktivovat, pokud má každému nasazení předcházet kontrola uživatelem. Změny provedené přímo v HA se do GitHubu neodesílají.
+1. Otevřete **HACS → ⋮ → Vlastní repozitáře**.
+2. Přidejte `https://github.com/sochorf/iotmeter` s typem **Integrace**.
+3. Vyhledejte **IoTMeter** a zvolte **Stáhnout**.
+4. Restartujte Home Assistant.
+5. Při nové instalaci pokračujte nastavením níže.
 
-Dokumentace: https://www.hacs.xyz/docs/faq/custom_repositories/ a https://www.hacs.xyz/docs/publish/integration/
+### Přechod z ruční instalace
+
+Pokud už používáte `custom_components/iotmeter`, nejdříve zálohujte současné soubory a případné vlastní změny. HACS při stažení nahradí kód ve stejné složce. Existující položku IoTMeteru v **Zařízení a služby** nemažte a nevytvářejte znovu. Po stažení restartujte HA a ověřte původní entity.
+
+## Ruční instalace
+
+1. Z repozitáře zkopírujte složku `custom_components/iotmeter` do složky `custom_components` v konfiguraci HA.
+2. Výsledná cesta k manifestu musí být `/config/custom_components/iotmeter/manifest.json` při standardním umístění konfigurace v HA OS.
+3. Restartujte Home Assistant a pokračujte nastavením.
+
+## Nastavení
+
+1. Otevřete **Nastavení → Zařízení a služby → Přidat integraci**.
+2. Vyhledejte **IoTMeter**.
+3. Zadejte IP adresu IoTmeteru, například `192.168.1.50`.
+4. Dokončete nastavení a zkontrolujte vytvořené entity.
+
+Zařízení se nejprve ověřuje přes `/updateSetting`. Integrace následně přibližně každých **10 sekund** načítá `/updateSetting`, `/updateEvse` a `/updateData`. Při pomalých odpovědích nebo výpadku může aktualizace trvat déle. Změny ovládacích entit zapisuje zpět do zařízení přes jeho API.
+
+## Aktualizace a návrat ke starší verzi
+
+Aktualizace stahujte přes HACS a poté restartujte HA. Pokud repozitář nabízí GitHub Releases, vyberte požadované vydání; bez vydání HACS používá výchozí větev. Pro ruční kontrolu každé změny ponechte automatické aktualizace vypnuté.
+
+Před aktualizací uchovejte zálohu. Návrat proveďte instalací předchozí dostupné verze nebo obnovením zálohy souborů. Změny provedené přímo v HA se do GitHubu automaticky neukládají a další stažení je může přepsat.
+
+## Řešení problémů
+
+- **Nelze přidat zařízení:** ověřte IP adresu a dostupnost portu 8000 ze sítě HA.
+- **Senzory jsou nedostupné:** zkontrolujte spojení a odpovědi API. Dostupnost měřicích a diagnostických senzorů se vyhodnocuje podle příslušného zdroje dat; poslední úspěšná odpověď neprokazuje stáří fyzického měření uvnitř zařízení.
+- **Chybí některé entity EVSE:** ověřte nastavený počet stanic a shodu s daty vracenými API.
+- **Chybí ikona nebo logo:** ověřte soubory v `custom_components/iotmeter/brand/`, podporovanou verzi HA a restart. HACS může obrázky načítat jiným způsobem než rozhraní HA.
+- **Další chyby:** podívejte se do **Nastavení → Systém → Protokoly** a vyhledejte `iotmeter`.
+
+Pro hlášení problémů použijte [GitHub Issues](https://github.com/sochorf/iotmeter/issues). Uveďte verzi HA, integrace, firmwaru zařízení a relevantní výpis chyby bez přihlašovacích nebo jiných citlivých údajů.
+
+## Odkazy
+
+- [IoTmeter 65A – informace výrobce EV Racing](https://www.evracing.cz/iotmeter-65a-wifi-rs485/)
+- [Repozitář integrace](https://github.com/sochorf/iotmeter)
+- [Přidání vlastního repozitáře do HACS](https://www.hacs.xyz/docs/faq/custom_repositories/)
+- [Místní ikony a loga v Home Assistantu](https://developers.home-assistant.io/docs/core/integration/brand_images/)
