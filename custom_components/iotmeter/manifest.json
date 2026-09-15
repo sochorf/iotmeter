@@ -1,0 +1,17 @@
+{
+  "domain": "iotmeter",
+  "name": "IoTMeter",
+  "documentation": "https://github.com/sochorf/iotmeter",
+  "version": "1.0.1",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "config_flow": true,
+  "requirements": [],
+  "codeowners": ["@sochorf"],
+  "dependencies": [],
+  "after_dependencies": [],
+  "quality_scale": "silver",
+  "issue_tracker": "https://github.com/sochorf/iotmeter/issues",
+  "logo": "logo.png",
+  "icon": "icon.png"
+}

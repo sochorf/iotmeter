@@ -1,0 +1,13 @@
+DOMAIN = "iotmeter"
+
+DEFAULT_SCAN_INTERVAL = 10
+DEFAULT_PORT = 8000
+
+CONF_IP = "ip"
+
+# REST endpoints
+ENDPOINT_SETTINGS = "/updateSetting"
+ENDPOINT_EVSE = "/updateEvse"
+ENDPOINT_DATA = "/updateData"
+
+VALID_DEVICE_ID = "93189"

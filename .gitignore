@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+__MACOSX/
+.venv/
+.env
+.env.*
+secrets.yaml
+.storage/
+*.log
