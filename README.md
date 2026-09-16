@@ -30,7 +30,7 @@ Entity lze využít v přehledech a vlastních automatizacích Home Assistantu. 
 
 Pro jednotlivé stanice integrace poskytuje stav, původní stavový kód, komunikační chybový údaj a konfigurační a výstupní proud. Proudové hodnoty API nejsou automaticky důkazem skutečného odběru vozidla.
 
-Aktuální implementace rozlišuje stavové kódy `1` (odpojeno) a `2` (připojeno). Ostatní kódy zobrazuje jako `unmapped`; odpovídající binární senzor připojení je v takovém případě nedostupný, aby nehlásil chybně odpojené vozidlo. Chybové kódy EVSE předává bez vlastní interpretace.
+Integrace rozlišuje ověřené stavové kódy `1` (odpojeno), `2` (připojeno) a `3` (nabíjí). Binární senzor `binary_sensor.iotmeter_evseN_connected` je zapnutý pro kódy 2 a 3; nový `binary_sensor.iotmeter_evseN_charging` pouze pro kód 3. Číslo N označuje stanici od 1. Ostatní kódy se zobrazují jako `unmapped` a oba binární senzory jsou nedostupné. Při chybě zdroje jsou rovněž nedostupné, aby nehlásily chybně ukončené nabíjení. Chybové kódy EVSE se předávají bez vlastní interpretace. Indikace nabíjení nepředstavuje měření výkonu a nevyžaduje další API dotazy.
 
 ## Požadavky
 

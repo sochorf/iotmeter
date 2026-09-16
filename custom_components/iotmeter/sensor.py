@@ -556,7 +556,7 @@ class IoTMeterEVSESensor(CoordinatorEntity, SensorEntity):
         if raw is None:
             return None
         if self._kind == "state":
-            return {1: "disconnected", 2: "connected"}.get(raw, "unmapped")
+            return {1: "disconnected", 2: "connected", 3: "charging"}.get(raw, "unmapped")
         return raw
 
     @property

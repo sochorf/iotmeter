@@ -1,5 +1,16 @@
 # Historie vydání
 
+## 1.0.3
+
+- Stavový kód EVSE 3 se zobrazuje jako `charging`; ověřeno uživatelem při skutečném nabíjení.
+- Připojení vozu zůstává `on` také během nabíjení (kód 3).
+- Každá stanice získává vlastní binární senzor `iotmeter_evseN_charging`.
+- Neznámé kódy a chyba zdroje znamenají nedostupnou indikaci, nikoli vypnuté nabíjení.
+- Existující názvy, unique_id, interval a počet API dotazů jsou zachovány.
+
+Po aktualizaci restartujte Home Assistant. Existující integraci nemažte.
+Ověřena syntaxe Pythonu a izolovaná logika kódů 1/2/3, neznámého kódu a chybějících dat. Běh v HA bude ověřen po nasazení.
+
 ## 1.0.2
 
 - Přidána metadata pro instalaci a aktualizace přes HACS.

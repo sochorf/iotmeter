@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
                 continue
             created_evse.add(index)
             additions.append(IoTMeterEVSEConnected(coordinator, entry.entry_id, index))
+            additions.append(IoTMeterEVSECharging(coordinator, entry.entry_id, index))
         if additions:
             async_add_entities(additions)
 
@@ -163,9 +164,9 @@ class IoTMeterBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         return None
 
 class IoTMeterEVSEConnected(CoordinatorEntity, BinarySensorEntity):
-    """Připojení vozu pouze podle ověřených kódů 1/2.
+    """Připojení vozu podle ověřených kódů: 1 odpojeno, 2 připojeno, 3 nabíjí.
 
-    Neověřený kód může znamenat i nabíjení: nesmí být interpretován jako off.
+    Další neověřené kódy nesmí být automaticky interpretovány jako off.
     Proto je při jiném kódu připojení unavailable a raw kód zůstává v senzoru.
     """
 
@@ -186,9 +187,33 @@ class IoTMeterEVSEConnected(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def available(self):
-        return self.coordinator.evse_value(self._index, "EV_STATE") in (1, 2)
+        return self.coordinator.evse_value(self._index, "EV_STATE") in (1, 2, 3)
 
     @property
     def is_on(self):
         raw = self.coordinator.evse_value(self._index, "EV_STATE")
-        return raw == 2 if raw in (1, 2) else None
+        return raw in (2, 3) if raw in (1, 2, 3) else None
+
+
+class IoTMeterEVSECharging(IoTMeterEVSEConnected):
+    """Nabíjení hlášené wallboxem; kód 3 ověřen při nabíjení 16. 9. 2026.
+
+    Používá stejné čtení /updateEvse jako ostatní entity, bez dalšího dotazu.
+    Proud ACTUAL_OUTPUT_CURRENT k detekci nepoužíváme: zůstává nenulový
+    i při odpojeném voze. Toto není měření nabíjecího výkonu.
+    Dostupnost se dědí: chyba zdroje či neznámý kód znamená unavailable.
+    """
+
+    _attr_device_class = "running"
+
+    def __init__(self, coordinator, entry_id, index):
+        super().__init__(coordinator, entry_id, index)
+        suffix = f"iotmeter_evse{index + 1}_charging"
+        self.entity_id = f"binary_sensor.{suffix}"
+        self._attr_unique_id = f"{entry_id}_{suffix}"
+        self._attr_name = f"IoTMeter EVSE{index + 1} Charging"
+
+    @property
+    def is_on(self):
+        raw = self.coordinator.evse_value(self._index, "EV_STATE")
+        return raw == 3 if raw in (1, 2, 3) else None
