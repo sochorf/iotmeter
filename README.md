@@ -85,6 +85,12 @@ Před aktualizací uchovejte zálohu. Návrat proveďte instalací předchozí d
 
 Pro hlášení problémů použijte [GitHub Issues](https://github.com/sochorf/iotmeter/issues). Uveďte verzi HA, integrace, firmwaru zařízení a relevantní výpis chyby bez přihlašovacích nebo jiných citlivých údajů.
 
+## Podpora vývoje
+
+Pokud vám integrace pomáhá, můžete podpořit její další vývoj dobrovolným příspěvkem. Děkuji!
+
+[☕ Buy Me a Coffee](https://buymeacoffee.com/BIjKcYlRJ)
+
 ## Odkazy
 
 - [IoTmeter 65A – informace výrobce EV Racing](https://www.evracing.cz/iotmeter-65a-wifi-rs485/)
