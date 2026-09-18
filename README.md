@@ -89,7 +89,7 @@ Pro hlášení problémů použijte [GitHub Issues](https://github.com/sochorf/i
 
 Pokud vám integrace pomáhá, můžete podpořit její další vývoj dobrovolným příspěvkem. Děkuji!
 
-[☕ Buy Me a Coffee](https://buymeacoffee.com/BIjKcYlRJ)
+<a href="https://buymeacoffee.com/BIjKcYlRJ"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" width="217" height="60"></a>
 
 ## Odkazy
 
