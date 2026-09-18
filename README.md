@@ -44,11 +44,33 @@ Podpora místních ikon ve složce `brand` vyžaduje Home Assistant **2026.3 neb
 
 ## Instalace přes HACS
 
-1. Otevřete **HACS → ⋮ → Vlastní repozitáře**.
-2. Přidejte `https://github.com/sochorf/iotmeter` s typem **Integrace**.
-3. Vyhledejte **IoTMeter** a zvolte **Stáhnout**.
-4. Restartujte Home Assistant.
-5. Při nové instalaci pokračujte nastavením níže.
+Nejdříve musíte mít v Home Assistantu nainstalovaný a nastavený [HACS](https://www.hacs.xyz/docs/use/). IoTMeter přidejte jako vlastní repozitář jedním z následujících způsobů.
+
+### Otevření pomocí tlačítka
+
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sochorf&repository=iotmeter&category=integration)
+
+1. Klikněte na **Open in HACS**. Pokud vás My Home Assistant požádá o adresu vaší instance HA, zadejte adresu, přes kterou HA běžně otevíráte.
+2. Pokračujte tlačítkem **Open link** a v HACS potvrďte přidání repozitáře, pokud se potvrzení zobrazí.
+3. Na stránce **IoTMeter** zvolte **Stáhnout**, vyberte nejnovější stabilní vydání a potvrďte stažení.
+4. Restartujte Home Assistant a pokračujte částí [Nastavení](#nastavení).
+
+Tlačítko pouze otevře příslušnou stránku; samo nenainstaluje HACS ani integraci. Pokud odkaz nefunguje, použijte ruční postup níže.
+
+### Ruční přidání repozitáře do HACS
+
+1. V Home Assistantu otevřete **HACS**.
+2. Vpravo nahoře klikněte na **⋮ → Vlastní repozitáře** (Custom repositories).
+3. Do pole **Repozitář** vložte:
+
+   ```text
+   https://github.com/sochorf/iotmeter
+   ```
+
+4. V poli **Typ** vyberte **Integrace** (Integration) a klikněte na **Přidat**.
+5. Zavřete dialog a v seznamu HACS vyhledejte **IoTMeter**. Pokud jej nevidíte, zrušte případné filtry a obnovte stránku.
+6. Otevřete IoTMeter, klikněte na **Stáhnout** a potvrďte nejnovější stabilní vydání.
+7. Restartujte Home Assistant a pokračujte částí [Nastavení](#nastavení).
 
 ### Přechod z ruční instalace
 
