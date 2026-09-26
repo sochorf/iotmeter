@@ -220,4 +220,4 @@ class IoTMeterNumberSetting(CoordinatorEntity, NumberEntity):
             )
             return
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_settings_refresh()

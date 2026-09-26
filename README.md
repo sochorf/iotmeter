@@ -89,7 +89,7 @@ Pokud už používáte `custom_components/iotmeter`, nejdříve zálohujte souč
 3. Zadejte IP adresu IoTmeteru, například `192.168.1.50`.
 4. Dokončete nastavení a zkontrolujte vytvořené entity.
 
-Zařízení se nejprve ověřuje přes `/updateSetting`. Integrace následně přibližně každých **10 sekund** načítá `/updateSetting`, `/updateEvse` a `/updateData`. Při pomalých odpovědích nebo výpadku může aktualizace trvat déle. Změny ovládacích entit zapisuje zpět do zařízení přes jeho API.
+Zařízení se nejprve ověřuje přes `/updateSetting`. Od verze **1.0.4** má čtení samostatné cílové intervaly: **data 5 s, EVSE 10 s a settings 60 s**. Každá dávka používá novou HTTP session, po dokončení ji uzavírá a požadavky provádí postupně. Při pomalých odpovědích nebo výpadku mohou být intervaly delší. Zápisy ovládacích entit přes API vyžádají přednostní načtení settings. Podrobnosti a postup ověření jsou v [historii vydání](CHANGELOG.md).
 
 ## Aktualizace a návrat ke starší verzi
 

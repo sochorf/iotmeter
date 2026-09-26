@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import logging
+from time import monotonic
 from typing import Any
 from datetime import timedelta
 from homeassistant.util import dt as dt_util
 
 import asyncio
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientSession, TCPConnector
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -16,6 +16,7 @@ from .const import (
     CONF_IP,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DATA_SCAN_INTERVAL, EVSE_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL,
     ENDPOINT_SETTINGS,
     ENDPOINT_EVSE,
     ENDPOINT_DATA,
@@ -36,7 +37,10 @@ class IoTMeterCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self._hass = hass
-        self._session = async_get_clientsession(hass)
+        self._clock = monotonic
+        self._next_due = {key: 0.0 for key in ("settings", "evse", "data")}
+        self._settings_generation = 0
+        self._settings_read_generation = 0
 
         # ULOŽENÁ IP + PORT + string base_url
         self._ip = ip
@@ -65,11 +69,12 @@ class IoTMeterCoordinator(DataUpdateCoordinator):
         """Port IoTMeteru (pro zápis)."""
         return self._port
 
-    async def _fetch_json(self, endpoint: str) -> dict[str, Any] | None:
+    async def _fetch_json(self, session: ClientSession, endpoint: str) -> dict[str, Any] | None:
         """Fetch jednoho endpointu z IoTMeteru, vrací JSON nebo None při chybě."""
         url = f"{self.base_url}{endpoint}"
+        started = self._clock()
         try:
-            async with self._session.get(url, timeout=10) as resp:
+            async with session.get(url, timeout=10) as resp:
                 if resp.status != 200:
                     _LOGGER.warning(
                         "IoTMeter: HTTP %s při čtení %s",
@@ -82,8 +87,9 @@ class IoTMeterCoordinator(DataUpdateCoordinator):
 
         except (ClientError, asyncio.TimeoutError) as err:
             _LOGGER.warning(
-                "IoTMeter: chyba komunikace s %s: %s",
+                "IoTMeter: chyba komunikace s %s (%s): %s",
                 url,
+                type(err).__name__,
                 err,
             )
             return None
@@ -95,35 +101,55 @@ class IoTMeterCoordinator(DataUpdateCoordinator):
             )
             return None
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Stejné pořadí, interval a počet dotazů; evidence výsledků po zdrojích.
+        finally:
+            _LOGGER.debug("IoTMeter: %s dokončen za %.3f s", endpoint, self._clock() - started)
 
-        Cache uchovává poslední hodnoty, ale sensor.available rozhoduje,
-        zda je lze zveřejnit. Časy se mění pouze při validní odpovědi.
-        Stav se do entit promítne po dokončení celého cyklu (až tři timeouty).
-        Jde o kontrolu odpovědi API, nikoli stáří fyzického měření uvnitř zařízení.
+    async def async_request_settings_refresh(self) -> None:
+        """A write requests settings refresh even inside its normal 60s period."""
+        self._settings_generation += 1
+        await self.async_request_refresh()
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """One fresh session per batch; serial requests only for due sources.
+
+        Deadlines use monotonic time and advance on attempts, including failures.
+        Skipping a source preserves both its success flag and last-success time.
+        No retries/catch-up bursts. HA schedules the next batch after completion,
+        so 5/10/60 seconds are minimum target intervals, not real-time guarantees.
         """
         result = dict(self.data or {})
-        for source, endpoint in (
-            ("settings", ENDPOINT_SETTINGS),
-            ("evse", ENDPOINT_EVSE),
-            ("data", ENDPOINT_DATA),
-        ):
-            payload = await self._fetch_json(endpoint)
-            valid = isinstance(payload, dict) and bool(payload)
-            if valid and source in ("settings", "data"):
-                valid = not VALID_DEVICE_ID or str(payload.get("ID", "")) == VALID_DEVICE_ID
-            self.source_success[source] = valid
-            if valid:
-                result[source] = payload
-                self.last_success[source] = dt_util.utcnow()
-            else:
-                _LOGGER.warning(
-                    "IoTMeter: %s bez validní odpovědi; příslušné senzory budou unavailable",
-                    source.upper(),
-                )
-        # Vracíme cache i při výpadku. Dostupnost senzorů je per-source;
-        # diagnostické časy proto mohou zůstat viditelné i při úplném výpadku.
+        schedule = (
+            ("settings", ENDPOINT_SETTINGS, SETTINGS_SCAN_INTERVAL),
+            ("evse", ENDPOINT_EVSE, EVSE_SCAN_INTERVAL),
+            ("data", ENDPOINT_DATA, DATA_SCAN_INTERVAL),
+        )
+        now = self._clock()
+        generation = self._settings_generation
+        due = [(source, endpoint, interval) for source, endpoint, interval in schedule
+               if now >= self._next_due[source] or
+               (source == "settings" and generation != self._settings_read_generation)]
+        if not due:
+            return result
+        # Independent of HA's shared session; closed on success, error or cancellation.
+        # Unlike upstream, requests stay serial. Data is last to publish it freshest.
+        async with ClientSession(connector=TCPConnector(limit=1)) as session:
+            for source, endpoint, interval in due:
+                self._next_due[source] = self._clock() + interval
+                if source == "settings":
+                    self._settings_read_generation = generation
+                payload = await self._fetch_json(session, endpoint)
+                valid = isinstance(payload, dict) and bool(payload)
+                if valid and source in ("settings", "data"):
+                    valid = not VALID_DEVICE_ID or str(payload.get("ID", "")) == VALID_DEVICE_ID
+                self.source_success[source] = valid
+                if valid:
+                    result[source] = payload
+                    self.last_success[source] = dt_util.utcnow()
+                else:
+                    _LOGGER.warning(
+                        "IoTMeter: %s bez validní odpovědi; příslušné senzory budou unavailable",
+                        source.upper(),
+                    )
         return result
 
     @staticmethod

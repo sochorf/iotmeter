@@ -1,5 +1,27 @@
 # Historie vydání
 
+## 1.0.4 – oddělené intervaly a session pro každou dávku
+
+- `/updateData`: cílový interval 5 s; `/updateEvse`: 10 s; `/updateSetting`: 60 s.
+- Každá čtecí dávka vytváří vlastní HTTP session a po dokončení ji uzavře, obdobně jako autorova integrace. TCP spojení se nepřenášejí mezi dávkami; uvnitř dávky je možné opětovné použití.
+- Požadavky zůstávají postupné, nikoli souběžné. Data se čtou na konci dávky, aby byla při zveřejnění co nejčerstvější.
+- Timeout zůstává 10 s na požadavek. Bez okamžitých retry a bez dohánění zmeškaných cyklů. Skutečné intervaly mohou být delší kvůli odpovědím a plánování HA.
+- Po úspěšném zápisu z HA se vyžádá přednostní načtení settings. Externí změny nastavení se jinak mohou projevit až po minutě či déle při výpadku.
+- Přeskočené endpointy si zachovají stav dostupnosti a původní `last_success`. Neúspěšné čtení nadále znamená unavailable; toto vydání chyby nezakrývá tolerancí cache.
+- Debug log doplněn o dobu každého požadavku; komunikační chyba obsahuje typ výjimky.
+- Entity, unique_id, kódy EVSE a výpočty energie se nemění. Ruční zápisy nadále používají session HA; změna životnosti session se týká periodického čtení.
+
+### Aktualizace a ověření
+
+Aktualizujte integraci přes HACS a restartujte HA. Existující integraci nemažte.
+Sledujte skutečné intervaly `last_success` a výpadky dostupnosti během 24 hodin;
+schopnost firmware zvládat keep-alive zatím není prokázaná. Porovnejte s předchozí verzí.
+
+Prošlo 6 izolovaných testů koordinátoru, včetně skutečného lokálního HTTP serveru:
+plánování, čerstvé session, sériové požadavky, chyba zdroje, validace ID,
+vyžádané settings a uzavření při zrušení. Testy používají minimální mock HA;
+nejde o integrační test v běžícím Home Assistantu ani na fyzickém ESP32.
+
 ## 1.0.3
 
 - Stavový kód EVSE 3 se zobrazuje jako `charging`; ověřeno uživatelem při skutečném nabíjení.
