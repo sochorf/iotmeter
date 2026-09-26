@@ -64,6 +64,12 @@ SENSOR_DEFINITIONS: dict[str, IoTMeterSensorDescription] = {
         source="data", key="RUN_TIME", transform="int",
         device_class="duration", unit="s", entity_category="diagnostic",
     ),
+    "iotmeter_run_time_formatted": IoTMeterSensorDescription(
+        entity_id="iotmeter_run_time_formatted",
+        name="IoTMeter Run Time Formatted",
+        source="data", key="RUN_TIME", transform="duration_text",
+        entity_category="diagnostic",
+    ),
     # Device-local text: API carries no UTC offset; do not invent a timestamp.
     "iotmeter_wattmeter_time": IoTMeterSensorDescription(
         entity_id="iotmeter_wattmeter_time",

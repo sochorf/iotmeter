@@ -123,3 +123,5 @@ Pokud vám integrace pomáhá, můžete podpořit její další vývoj dobrovoln
 ### Diagnostika času zařízení (1.0.5)
 
 `sensor.iotmeter_run_time` zobrazuje RUN_TIME v sekundách. Pokles může značit restart nebo změnu časové základny. `sensor.iotmeter_wattmeter_time` zobrazuje původní lokální čas zařízení bez domýšlení časového pásma. Oba senzory používají stávající čtení dat; nepotvrzují čerstvost interního měření EVSE.
+
+Od 1.0.6 lze pro zobrazení použít `sensor.iotmeter_run_time_formatted` s formátem `DD:HH:MM:SS`. Číselný senzor zůstává zachován. Názvy GitHub releases používají stručný popis bez čísla verze; verze patří do tagu a manifestu.

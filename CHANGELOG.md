@@ -1,5 +1,16 @@
 # Historie vydání
 
+## 1.0.6 – Přehledná doba běhu zařízení
+
+- Nový diagnostický textový senzor `sensor.iotmeter_run_time_formatted` ve formátu `DD:HH:MM:SS`.
+- Například 4232478 sekund se zobrazí jako `48:23:41:18`. Počet dnů může přesáhnout dvě číslice.
+- Původní `sensor.iotmeter_run_time` v sekundách zůstává zachovaný.
+- Chybějící, záporné a neplatné hodnoty nejsou nahrazovány nulou. Dostupnost se řídí zdrojem dat.
+- Bez dalších HTTP požadavků a bez změny regulace či intervalů čtení.
+
+Aktualizujte přes HACS a restartujte HA. Integraci nemažte.
+Ověřeny hraniční a neplatné vstupy formátování, kompilace Pythonu a šest regresních testů koordinátoru. Běh v HA bude ověřen po nasazení.
+
 ## 1.0.5 – diagnostika běhu a času zařízení
 
 - Nový diagnostický senzor `sensor.iotmeter_run_time`: hodnota `RUN_TIME` v sekundách, device class duration.

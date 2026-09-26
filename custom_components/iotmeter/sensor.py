@@ -127,6 +127,20 @@ class IoTMeterSensorEntity(CoordinatorEntity, SensorEntity):
         if not transform:
             return raw
 
+        if transform == "duration_text":
+            if isinstance(raw, bool):
+                return None
+            try:
+                seconds = Decimal(str(raw))
+                if not seconds.is_finite() or seconds < 0 or seconds != seconds.to_integral_value():
+                    return None
+                days, remainder = divmod(int(seconds), 86400)
+                hours, remainder = divmod(remainder, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                return f"{days:02d}:{hours:02d}:{minutes:02d}:{seconds:02d}"
+            except (InvalidOperation, ValueError, TypeError):
+                return None
+
         if transform == "int":
             return self._to_int(raw)
 
