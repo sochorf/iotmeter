@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -73,6 +73,9 @@ class IoTMeterSensorEntity(CoordinatorEntity, SensorEntity):
         self.entity_id = f"sensor.{description.entity_id}"
         self._attr_unique_id = description.entity_id
         self._attr_name = description.name
+
+        if description.entity_category:
+            self._attr_entity_category = EntityCategory(description.entity_category)
 
         # Device class & unit (převezmeme z definice, pokud je)
         if description.device_class:

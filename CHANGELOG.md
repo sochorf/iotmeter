@@ -1,5 +1,17 @@
 # Historie vydání
 
+## 1.0.5 – diagnostika běhu a času zařízení
+
+- Nový diagnostický senzor `sensor.iotmeter_run_time`: hodnota `RUN_TIME` v sekundách, device class duration.
+- Nový diagnostický senzor `sensor.iotmeter_wattmeter_time`: interní čas `WATTMETER_TIME` v původním textovém formátu. API neposkytuje UTC offset, proto jej nepřevádíme na timestamp HA.
+- Oba senzory používají existující `/updateData`; žádné další HTTP požadavky ani změna intervalů či sessions.
+- Při chybě zdroje jsou senzory unavailable. Chybějící hodnota zůstává unknown, není nahrazena nulou.
+- Pokles RUN_TIME může znamenat restart nebo změnu časové základny. Postupující čas zařízení není důkazem čerstvého měření EVSE.
+
+Aktualizace: přes HACS na 1.0.5 a restart HA. Integraci nemažte. Nové entity najdete v diagnostice zařízení IoTMeter.
+
+Ověření: kompilace Pythonu a šest regresních testů koordinátoru. Ověření v běžícím HA proběhne po nasazení.
+
 ## 1.0.4 – oddělené intervaly a session pro každou dávku
 
 - `/updateData`: cílový interval 5 s; `/updateEvse`: 10 s; `/updateSetting`: 60 s.

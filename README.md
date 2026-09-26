@@ -119,3 +119,7 @@ Pokud vám integrace pomáhá, můžete podpořit její další vývoj dobrovoln
 - [Repozitář integrace](https://github.com/sochorf/iotmeter)
 - [Přidání vlastního repozitáře do HACS](https://www.hacs.xyz/docs/faq/custom_repositories/)
 - [Místní ikony a loga v Home Assistantu](https://developers.home-assistant.io/docs/core/integration/brand_images/)
+
+### Diagnostika času zařízení (1.0.5)
+
+`sensor.iotmeter_run_time` zobrazuje RUN_TIME v sekundách. Pokles může značit restart nebo změnu časové základny. `sensor.iotmeter_wattmeter_time` zobrazuje původní lokální čas zařízení bez domýšlení časového pásma. Oba senzory používají stávající čtení dat; nepotvrzují čerstvost interního měření EVSE.

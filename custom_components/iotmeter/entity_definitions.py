@@ -32,6 +32,7 @@ class IoTMeterSensorDescription:
     device_class: Optional[str] = None
     state_class: Optional[str] = None
     unit: Optional[str] = None
+    entity_category: Optional[str] = None
 
     # Jméno "typové" transformace, kterou si implementujeme v sensor.py
     transform: Optional[str] = None
@@ -57,6 +58,18 @@ class IoTMeterBinarySensorDescription:
 ###############################################################################
 
 SENSOR_DEFINITIONS: dict[str, IoTMeterSensorDescription] = {
+    "iotmeter_run_time": IoTMeterSensorDescription(
+        entity_id="iotmeter_run_time",
+        name="IoTMeter Run Time",
+        source="data", key="RUN_TIME", transform="int",
+        device_class="duration", unit="s", entity_category="diagnostic",
+    ),
+    # Device-local text: API carries no UTC offset; do not invent a timestamp.
+    "iotmeter_wattmeter_time": IoTMeterSensorDescription(
+        entity_id="iotmeter_wattmeter_time",
+        name="IoTMeter Device Time",
+        source="data", key="WATTMETER_TIME", entity_category="diagnostic",
+    ),
     # ---------------------------------------------------------------------
     # SETTINGS – last good result + atributy
     # ---------------------------------------------------------------------
